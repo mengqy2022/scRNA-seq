@@ -1,6 +1,6 @@
 rm(list = ls())
 gc()
-setwd("C:/Users/15877/Desktop/scRNA-seq")
+setwd("D:/workplace/workplace_git/scRNA-seq/02_Data_processing")
 if (! dir.exists("./02_Data_processing")){
 	dir.create("./02_Data_processing")
 }
@@ -103,16 +103,13 @@ qc_plot <- VlnPlot(merged_seurat,
 									 cols = ggsci::pal_npg()(6)) +
 	theme(plot.title = element_text(size = 10))
 
-# 显示图形（可选）
-print(qc_plot)
-
 # 保存为PNG（透明背景可选）
 ggsave("qc_plot.png", qc_plot, 
-			 width = 10, height = 6, dpi = 300, bg = "white")
+			 width = 12, height = 6, dpi = 300, bg = "white")
 
 # 保存为PDF（矢量图，适合论文）
 ggsave("qc_plot.pdf", qc_plot, 
-			 width = 10, height = 6, device = pdf)
+			 width = 12, height = 6, device = pdf)
 
 # 过滤低质量细胞
 # 线粒体基因的百分比 5%

@@ -1,6 +1,6 @@
 rm(list = ls())
 gc()
-setwd("C:/Users/15877/Desktop/scRNA-seq")
+setwd("D:/workplace/workplace_git/scRNA-seq/02_Data_processing")
 if (! dir.exists("./00_rawdata")){
 	dir.create("./00_rawdata")
 }
