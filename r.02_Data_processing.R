@@ -82,9 +82,6 @@ for (i in seq_along(sample_dirs)) {
 merged_seurat <- merge(seurat_list[[1]], y = seurat_list[-1],
 											 add.cell.ids = names(seurat_list))
 
-merged_seurat <- NormalizeData(merged_seurat)
-merged_seurat <- FindVariableFeatures(merged_seurat)
-
 # 质量控制与数据预处理 --------------------------------------------------------------
 # 质量控制可视化
 qc_plot <- VlnPlot(merged_seurat, 
@@ -96,20 +93,30 @@ qc_plot <- VlnPlot(merged_seurat,
 	theme(plot.title = element_text(size=10))
 
 # 生成QC图
-qc_plot <- VlnPlot(merged_seurat, 
-									 features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
-									 ncol = 3, 
-									 pt.size = 0.1,
-									 cols = ggsci::pal_npg()(6)) +
-	theme(plot.title = element_text(size = 10))
+qc_plot <- VlnPlot(
+		merged_seurat,
+		features = c("nFeature_RNA", "nCount_RNA", "percent.mt"),
+		ncol = 3,
+		pt.size = 0.1,
+		cols = ggsci::pal_npg()(6)
+	) &  # 注意这里用 & 而不是 +
+		theme(
+			axis.text.x = element_text(angle = 45, hjust = 1, size = 10),  
+			plot.margin = margin(0, .5, 0, .5, "cm")
+		)
+
 
 # 保存为PNG（透明背景可选）
 ggsave("qc_plot.png", qc_plot, 
-			 width = 12, height = 6, dpi = 300, bg = "white")
+			 width = 12, 
+			 height = 6, 
+			 dpi = 300, bg = "white")
 
 # 保存为PDF（矢量图，适合论文）
 ggsave("qc_plot.pdf", qc_plot, 
-			 width = 12, height = 6, device = pdf)
+			 width = 12, 
+			 height = 6, 
+			 device = pdf)
 
 # 过滤低质量细胞
 # 线粒体基因的百分比 5%
@@ -119,14 +126,26 @@ filtered_seurat <- subset(merged_seurat,
 													subset = nFeature_RNA > 200 & nFeature_RNA < 6000 & 
 														percent.mt < 5)
 
+# 标准化数据
+filtered_seurat <- NormalizeData(filtered_seurat, 
+																 normalization.method = "LogNormalize", 
+																 scale.factor = 10000)
+
 # 识别高变基因
 filtered_seurat <- FindVariableFeatures(filtered_seurat, 
-                                        selection.method = "vst", 
-                                        nfeatures = 2000)
+																				selection.method = "vst", 
+																				nfeatures = 2000)
 
-# 缩放数据
-filtered_seurat <- ScaleData(filtered_seurat, 
-                             features = rownames(filtered_seurat))
+# 标准化并缩放数据（Z-score标准化）
+filtered_seurat <- ScaleData(filtered_seurat)
+
+# 运行PCA（必须步骤，DoubletFinder依赖PCA结果）
+filtered_seurat <- RunPCA(filtered_seurat, 
+													features = VariableFeatures(object = filtered_seurat),
+													npcs = 50,
+													verbose = FALSE)
+
+
 
 # 降维与聚类分析 -----------------------------------------------------------------
 # 细胞异质性：通过聚类分析识别不同的细胞亚群，特别是成纤维细胞的亚群划分
@@ -140,6 +159,13 @@ pca_plot <- DimPlot(filtered_seurat,
                     group.by = "sample") +
 	theme_minimal() +
 	ggtitle("PCA by Sample")
+
+
+# 双峰检测 (DoubletFinder)
+sweep.res <- paramSweep(filtered_seurat, PCs = 1:15, sct = FALSE)
+sweep.stats <- summarizeSweep(sweep.res, GT = FALSE)
+bcmvn <- find.pK(sweep.stats)
+pK <- as.numeric(as.character(bcmvn$pK[which.max(bcmvn$BCmetric)]))
 
 # 确定主成分数量
 ElbowPlot(filtered_seurat, ndims = 50)
