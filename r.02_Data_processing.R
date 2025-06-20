@@ -122,7 +122,7 @@ ggsave("qc_plot.pdf", qc_plot,
 # 线粒体基因的百分比 5%
 summary(merged_seurat@meta.data[["percent.mt"]])
 # 去除 UMI 计数高和低 （>6000 和 <200） 的细胞
-filtered_seurat <- subset(merged_seurat, 
+fikjkjjkked_seurat <- subset(merged_seurat, 
 													subset = nFeature_RNA > 200 & nFeature_RNA < 6000 & 
 														percent.mt < 5)
 
@@ -145,7 +145,7 @@ filtered_seurat <- RunPCA(filtered_seurat,
 													npcs = 50,
 													verbose = FALSE)
 
-
+hj
 
 # 降维与聚类分析 -----------------------------------------------------------------
 # 细胞异质性：通过聚类分析识别不同的细胞亚群，特别是成纤维细胞的亚群划分
