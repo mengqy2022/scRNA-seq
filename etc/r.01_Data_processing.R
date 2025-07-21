@@ -6,7 +6,7 @@ if (! dir.exists("./01_Data_processing")){
 }
 setwd("./01_Data_processing")
 options(stringsAsFactors = FALSE)
-
+library(Seurat)、
 # 软件包安装 -------------------------------------------------------------------
 
 # 定义需要安装的包
